@@ -13,6 +13,8 @@ This repository reproduces the results of the paper *[Finite Basis Physics-Infor
 - To do so, FBPINNs use a combination of **domain decomposition**, **subdomain normalisation** and **flexible training schedules**
 - FBPINNs outperform PINNs in terms of accuracy and computational resources required
 
+<img src="figures/compare.gif" width="850">
+
 ## Workflow
 
 <img src="figures/workflow.png" width="850">
