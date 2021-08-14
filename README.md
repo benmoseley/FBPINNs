@@ -50,6 +50,60 @@ Finally, download the source code:
 git clone https://github.com/benmoseley/FBPINNs.git
 ```
 
+## Getting started
+
+The workflow to train and compare FBPINNs and PINNs is very simple to set up, and consists of three steps:
+
+1. Initialise a `problems.Problem` class, which defines the differential equation (and boundary condition) you want to solve
+2. Initialise a `constants.Constants` object, which defines all of the other training hyperparameters (domain, number of subdomains, training schedule, .. etc)
+3. Pass this `Constants` object to the `main.FBPINNTrainer` or `main.PINNTrainer` class and call the `.train()` method to start training.
+
+For example, to solve the problem du/dx = cos(wx) shown above you can use the following code to train a FBPINN / PINN:
+
+```python
+P = problems.Cos1D_1(w=1, A=0)# initialise problem class
+
+c1 = constants.Constants(
+            RUN="FBPINN_%s"%(P.name),# run name
+            P=P,# problem class
+            SUBDOMAIN_XS=[np.linspace(-2*np.pi,2*np.pi,5)],# defines subdomains
+            SUBDOMAIN_WS=[2*np.ones(5)],# defines width of overlapping regions between subdomains
+            BOUNDARY_N=(1/P.w,),# optional arguments passed to the constraining operator
+            Y_N=(0,1/P.w,),# defines unnormalisation
+            ACTIVE_SCHEDULER=active_schedulers.AllActiveSchedulerND,# training scheduler
+            ACTIVE_SCHEDULER_ARGS=(),# training scheduler arguments
+            N_HIDDEN=16,# number of hidden units in subdomain network
+            N_LAYERS=2,# number of hidden layers in subdomain network
+            BATCH_SIZE=(200,),# number of training points
+            N_STEPS=5000,# number of training steps
+            BATCH_SIZE_TEST=(400,),# number of testing points
+            )
+
+run = main.FBPINNTrainer(c1)# train FBPINN
+run.train()
+
+c2 = constants.Constants(
+            RUN="PINN_%s"%(P.name),
+            P=P,
+            SUBDOMAIN_XS=[np.linspace(-2*np.pi,2*np.pi,5)],
+            BOUNDARY_N=(1/P.w,),
+            Y_N=(0,1/P.w,),
+            N_HIDDEN=32,
+            N_LAYERS=3,
+            BATCH_SIZE=(200,),
+            N_STEPS=5000,
+            BATCH_SIZE_TEST=(400,),
+            )
+
+run = main.PINNTrainer(c2)# train PINN
+run.train()
+```
+
+The training code will automatically start outputting training statistics, plots and tensorboard summaries. The tensorboard summaries can be viewed by installing [tensorboard](https://www.tensorflow.org/tensorboard) and then running the command line `tensorboard --logdir fbpinns/results/summaries/`.
+
+#### Defining your own `problem.Problem` class
+
+To learn how to define and solve your own problem, see the [Defining your own problem Jupyter notebook here](https://github.com/benmoseley/FBPINNs/blob/main/examples/Defining%20your%20own%20problem.ipynb).
 
 ## Reproducing our results
 
