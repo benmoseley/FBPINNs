@@ -10,20 +10,21 @@ FBPINNs were first presented here: *[Finite Basis Physics-Informed Neural Networ
 
 ---
 
-<figure>
-<center>
+https://github.com/benmoseley/FBPINNs/assets/33726845/69e8b064-e592-465e-8975-6fb61f00ffbe
+<p align="center">
+    <b>Fig 1: FBPINN solution of the (2+1)D wave equation with multiscale sources</b>
+</p>
 
-<figcaption><b>Fig 1: FBPINN solution of the (2+1)D wave equation with multiscale sources</b></figcaption>
-</center>
-</figure>
-
-<figure>
-<center>
-<img src="images/FBPINN.gif" alt="FBPINN solving the high-frequency 1D harmonic oscillator" style="width:45%"> <img src="images/PINN.gif" alt="PINN solving the high-frequency 1D harmonic oscillator" style="width:45%">
-<img src="images/test-loss.png" alt="Test loss comparison" style="width:30%">
-<figcaption><b>Fig 2: FBPINN vs PINN solving the high-frequency 1D harmonic oscillator</b></figcaption>
-</center>
-</figure>
+<p align="center">
+    <img src="images/FBPINN.gif" alt="FBPINN solving the high-frequency 1D harmonic oscillator" width=48%>
+    <img src="images/PINN.gif" alt="PINN solving the high-frequency 1D harmonic oscillator" width=48%>
+</p>
+<p align="center">
+    <img src="images/test-loss.png" alt="Test loss comparison" width=33%>
+</p>
+<p align="center">
+    <b>Fig 2: FBPINN vs PINN solving the high-frequency 1D harmonic oscillator</b>
+</p>
 
 ## Why FBPINNs?
 
@@ -35,12 +36,12 @@ FBPINNs were first presented here: *[Finite Basis Physics-Informed Neural Networ
 
 ## How are FBPINNs different to PINNs?
 
-<figure>
-<center>
-<img src="images/workflow.png" alt="FBPINN workflow overview" style="width:100%">
-<figcaption><b>Fig 3: FBPINN workflow overview</b></figcaption>
-</center>
-</figure>
+<p align="center">
+    <img src="images/workflow.png" alt="FBPINN workflow overview" width=100%>
+</p>
+<p align="center">
+    <b>Fig 3: FBPINN workflow overview</b>
+</p>
 
 To improve the scalability of PINNs to high frequency/ multiscale solutions:
 
@@ -56,12 +57,12 @@ The hypothesis is that this "divide and conquer" approach significantly reduces 
 
 ## Subdomain scheduling
 
-<figure>
-<center>
-<img src="images/scheduling.gif" alt="Solving the time-dependent Burgers' equation using a time-stepping subdomain scheduler" style="width:100%">
-<figcaption><b>Fig 4: Solving the time-dependent Burgers' equation using a time-stepping subdomain scheduler</b></figcaption>
-</center>
-</figure>
+<p align="center">
+    <img src="images/scheduling.gif" alt="Solving the time-dependent Burgers' equation using a time-stepping subdomain scheduler" width=100%>
+</p>
+<p align="center">
+    <b>Fig 4: Solving the time-dependent Burgers' equation using a time-stepping subdomain scheduler</b>
+</p>
 
 Another advantage of using domain decomposition is that we can control which **parts** of the domain are solved at each training step.
 
