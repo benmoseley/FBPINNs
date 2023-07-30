@@ -10,11 +10,6 @@ FBPINNs were first presented here: *[Finite Basis Physics-Informed Neural Networ
 
 ---
 
-https://github.com/benmoseley/FBPINNs/assets/33726845/69e8b064-e592-465e-8975-6fb61f00ffbe
-<p align="center">
-    <b>Fig 1: FBPINN solution of the (2+1)D wave equation with multiscale sources</b>
-</p>
-
 <p align="center">
     <img src="images/FBPINN.gif" alt="FBPINN solving the high-frequency 1D harmonic oscillator" width=48%>
     <img src="images/PINN.gif" alt="PINN solving the high-frequency 1D harmonic oscillator" width=48%>
