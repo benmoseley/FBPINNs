@@ -1,0 +1,33 @@
+[project]
+name = "fbpinns"
+version = "0.2.0"
+description = "Finite basis physics-informed neural networks (FBPINNs)"
+readme = "README.md"
+requires-python ="~=3.9"
+license = {file = "LICENSE"}
+authors = [
+  {name="Ben Moseley"},
+]
+keywords = ["jax", "neural-networks", "deep-learning", "fbpinns", "pinns"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Natural Language :: English",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Development Status :: 3 - Alpha",
+]
+dependencies = ["jax>=0.4.8", "optax>=0.1.4", "numpy>=1.24.2", "scipy>=1.10.1", "matplotlib>=3.7.1", "tensorboardX>=2.6", "ipython>=8.12.0"]
+
+[project.urls]
+"Homepage" = "https://github.com/benmoseley/FBPINNs"
+"Bug Tracker" = "https://github.com/benmoseley/FBPINNs/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["fbpinns/*"]
