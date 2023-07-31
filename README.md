@@ -4,9 +4,9 @@
 
 This repository allows you to solve forward and inverse problems related to partial differential equations (PDEs) using **finite basis physics-informed neural networks** (FBPINNs).
 
-> 🔥 MAJOR UPDATE 🔥: we have rewritten the `fbpinns` library in [JAX](https://jax.readthedocs.io/en/latest/index.html): it now runs 10-1000X faster than the original PyTorch code (by parallelising subdomain computations using `jax.vmap`) and scales to 1000s+ subdomains. We have also added extra functionality: you can now solve inverse problems, add arbitrary types of boundary/data constraints, define irregular domain decompositions and custom subdomain networks, and the high-level interface is much more flexible and easier to use. See the [Release note](https://github.com/benmoseley/FBPINNs/releases/tag/v0.2.0) for more info.
+> 🔥 MAJOR UPDATE 🔥: we have rewritten the `fbpinns` library in [JAX](https://jax.readthedocs.io/en/latest/index.html): it now runs 10-1000X faster than the original PyTorch code (by parallelising subdomain computations using `jax.vmap`) and scales to 1000s+ subdomains. We have also added extra functionality: you can now solve inverse problems, add arbitrary types of boundary/data constraints, define irregular/multilevel domain decompositions and custom subdomain networks, and the high-level interface is much more flexible and easier to use. See the [Release note](https://github.com/benmoseley/FBPINNs/releases/tag/v0.2.0) for more info.
 
-FBPINNs were first presented here: *[Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations](https://arxiv.org/abs/2107.07871), B. Moseley, T. Nissen-Meyer and A. Markham, Jul 2021 ArXiv*.
+FBPINNs are described in detail here: *[Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations](https://link.springer.com/article/10.1007/s10444-023-10065-9), B. Moseley, T. Nissen-Meyer and A. Markham, Jul 2023 Advances in Computational Mathematics*.
 
 ---
 
@@ -18,7 +18,7 @@ FBPINNs were first presented here: *[Finite Basis Physics-Informed Neural Networ
     <img src="images/test-loss.png" alt="Test loss comparison" width=33%>
 </p>
 <p align="center">
-    <b>Fig 2: FBPINN vs PINN solving the high-frequency 1D harmonic oscillator</b>
+    <b>Fig 1: FBPINN vs PINN solving the high-frequency 1D harmonic oscillator</b>
 </p>
 
 ## Why FBPINNs?
@@ -28,6 +28,13 @@ FBPINNs were first presented here: *[Finite Basis Physics-Informed Neural Networ
 - This is due to the **spectral bias** of neural networks and the **heavily increasing complexity** of the PINN optimisation problem
 - FBPINNs improve the performance of PINNs in this regime by combining them with **domain decomposition**, **individual subdomain normalisation** and **flexible subdomain training schedules**
 - Empirically, FBPINNs **significantly outperform** PINNs (in terms of accuracy and computational efficiency) when solving problems with high frequencies and multi-scale solutions (Fig 1 and 2)
+
+<p align="center">
+    <img src="images/we-multiscale.gif" alt="FBPINN solution of the (2+1)D wave equation with multiscale sources" width=100%>
+</p>
+<p align="center">
+    <b>Fig 2: FBPINN solution of the (2+1)D wave equation with multiscale sources</b>
+</p>
 
 ## How are FBPINNs different to PINNs?
 
@@ -96,7 +103,7 @@ Forward and inverse PDE problems are defined and solved by carrying out the foll
 
 1. Define the **problem domain**, by selecting or defining your own `fbpinns.domains.Domain` class
 2. Define the **PDE** to solve, and any **problem constraints** (such as boundary conditions or data constraints), by selecting or defining your own `fbpinns.problems.Problem` class
-3. Define the **domain decomposition** used by the FBPINN, by selecting or defining your own `fbpinns.decompositions.Decompositions` class
+3. Define the **domain decomposition** used by the FBPINN, by selecting or defining your own `fbpinns.decompositions.Decomposition` class
 4. Define the **neural network** placed in each subdomain, by selecting or defining your own `fbpinns.networks.Network` class
 5. Keep track of all the training hyperparameters by passing these classes and their initialisation values to a `fbpinns.constants.Constants` object
 6. Start the FBPINN training by instantiating a `fbpinns.trainer.FBPINNTrainer` using the `Constants` object.
@@ -195,14 +202,18 @@ How are FBPINNs different to other PINN + domain decomposition methods?
 If you find FBPINNs useful and use them in your own work, please use the following citations:
 
 ```
-@article{Moseley2021,
-arxivId = {2107.07871},
-author = {Moseley, Ben and Markham, Andrew and Nissen-Meyer, Tarje},
-journal = {arXiv},
+@article{Moseley2023,
+author = {Moseley, Ben and Markham, Andrew and Nissen-Meyer, Tarje and Mishra, Siddhartha},
+doi = {10.1007/S10444-023-10065-9},
+journal = {Advances in Computational Mathematics 2023 49:4},
 month = {jul},
-title = {{Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations}},
-url = {https://arxiv.org/abs/2107.07871v1 http://arxiv.org/abs/2107.07871},
-year = {2021}
+number = {4},
+pages = {1--39},
+publisher = {Springer},
+title = {{Finite basis physics-informed neural networks (FBPINNs): a scalable domain decomposition approach for solving differential equations}},
+url = {https://link.springer.com/article/10.1007/s10444-023-10065-9},
+volume = {49},
+year = {2023}
 }
 
 @article{Dolean2023,
@@ -218,7 +229,7 @@ year = {2023}
 
 ## Reproducing our original paper
 
-To reproduce the exact results of our original FBPINN paper (*[Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations](https://arxiv.org/abs/2107.07871), B. Moseley, T. Nissen-Meyer and A. Markham, Jul 2021 ArXiv*) you will need to use the legacy PyTorch FBPINN implementation, which is available at this [commit](https://github.com/benmoseley/FBPINNs/tree/pytorch).
+To reproduce the exact results of our original FBPINN paper (*[Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations](https://link.springer.com/article/10.1007/s10444-023-10065-9), B. Moseley, T. Nissen-Meyer and A. Markham, Jul 2023 Advances in Computational Mathematics*) you will need to use the legacy PyTorch FBPINN implementation, which is available at this [commit](https://github.com/benmoseley/FBPINNs/tree/pytorch).
 
 
 
