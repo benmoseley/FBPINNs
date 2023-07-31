@@ -203,7 +203,7 @@ If you find FBPINNs useful and use them in your own work, please use the followi
 
 ```
 @article{Moseley2023,
-author = {Moseley, Ben and Markham, Andrew and Nissen-Meyer, Tarje and Mishra, Siddhartha},
+author = {Moseley, Ben and Markham, Andrew and Nissen-Meyer, Tarje},
 doi = {10.1007/S10444-023-10065-9},
 journal = {Advances in Computational Mathematics 2023 49:4},
 month = {jul},
