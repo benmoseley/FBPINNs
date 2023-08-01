@@ -106,9 +106,9 @@ Forward and inverse PDE problems are defined and solved by carrying out the foll
 3. Define the **domain decomposition** used by the FBPINN, by selecting or defining your own `fbpinns.decompositions.Decomposition` class
 4. Define the **neural network** placed in each subdomain, by selecting or defining your own `fbpinns.networks.Network` class
 5. Keep track of all the training hyperparameters by passing these classes and their initialisation values to a `fbpinns.constants.Constants` object
-6. Start the FBPINN training by instantiating a `fbpinns.trainer.FBPINNTrainer` using the `Constants` object.
+6. Start the FBPINN training by instantiating a `fbpinns.trainers.FBPINNTrainer` using the `Constants` object.
 
-For example, to solve the 1D harmonic oscillator problem shown above (Fig 2):
+For example, to solve the 1D harmonic oscillator problem shown above (Fig 1):
 
 ```python
 import numpy as np
