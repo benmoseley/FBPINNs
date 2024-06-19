@@ -16,6 +16,8 @@ Once all the models have been trained using `main.py` (this script will save mod
 
 `plot.py` and `Paper plots.ipynb` reproduces all of the figures shown in the paper.
 
+`fourier_pinn_ablation.py` is an extra script which was used to select optimal hyperparameters for the PINNs with Fourier input features used in the paper.
+
 ## Using slurm
 
 `main.py` is set up to submit each training run as an independent job using [slurm](https://slurm.schedmd.com/).
