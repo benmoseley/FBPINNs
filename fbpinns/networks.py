@@ -36,8 +36,8 @@ class Network:
 
 
 
-
 class FCN(Network):
+    "Fully connected network"
 
     @staticmethod
     def init_params(key, layer_sizes):
@@ -68,10 +68,10 @@ class FCN(Network):
         return x
 
 class AdaptiveFCN(Network):
+    "Fully connected network with adaptive activations"
 
     @staticmethod
     def init_params(key, layer_sizes):
-
         keys = random.split(key, len(layer_sizes)-1)
         params = [AdaptiveFCN._random_layer_params(k, m, n)
                 for k, m, n in zip(keys, layer_sizes[:-1], layer_sizes[1:])]
@@ -99,7 +99,16 @@ class AdaptiveFCN(Network):
         x = jnp.dot(w, x) + b
         return x
 
-class SIREN(FCN):
+class SIREN(Network):
+    "Fully connected network with sin activations"
+
+    @staticmethod
+    def init_params(key, layer_sizes):
+        keys = random.split(key, len(layer_sizes)-1)
+        params = [SIREN._random_layer_params(k, m, n)
+                for k, m, n in zip(keys, layer_sizes[:-1], layer_sizes[1:])]
+        trainable_params = {"layers": params}
+        return {}, trainable_params
 
     @staticmethod
     def _random_layer_params(key, m, n):
@@ -122,10 +131,10 @@ class SIREN(FCN):
         return x
 
 class AdaptiveSIREN(Network):
+    "Fully connected network with adaptive sin activations"
 
     @staticmethod
     def init_params(key, layer_sizes):
-
         keys = random.split(key, len(layer_sizes)-1)
         params = [AdaptiveSIREN._random_layer_params(k, m, n)
                 for k, m, n in zip(keys, layer_sizes[:-1], layer_sizes[1:])]
@@ -153,6 +162,37 @@ class AdaptiveSIREN(Network):
         x = jnp.dot(w, x) + b
         return x
 
+class FourierFCN(FCN):
+    "Fully connected network with Fourier features"
+
+    @staticmethod
+    def init_params(key, layer_sizes, mu, sd, n_features):
+
+        # get Fourier feature parameters
+        key, subkey = random.split(key)
+        omega = 2*jnp.pi*(mu+sd*random.normal(subkey, (n_features, layer_sizes[0])))
+        layer_sizes = [2*n_features]+list(layer_sizes)[1:]
+
+        # get FCN parameters
+        keys = random.split(key, len(layer_sizes)-1)
+        params = [FCN._random_layer_params(k, m, n)
+                for k, m, n in zip(keys, layer_sizes[:-1], layer_sizes[1:])]
+        trainable_params = {"layers": params}
+        return {"omega":omega}, trainable_params
+
+    @staticmethod
+    def network_fn(params, x):
+        omega = params["static"]["network"]["subdomain"]["omega"]
+        params = params["trainable"]["network"]["subdomain"]["layers"]
+        x = jnp.dot(omega, x)
+        x = jnp.concatenate([jnp.sin(x), jnp.cos(x)])# (2*n_features)
+        for w, b in params[:-1]:
+            x = jnp.dot(w, x) + b
+            x = jnp.tanh(x)
+        w, b = params[-1]
+        x = jnp.dot(w, x) + b
+        return x
+
 
 def norm(mu, sd, x):
     return (x-mu)/sd
@@ -167,8 +207,12 @@ if __name__ == "__main__":
     x = jnp.ones(2)
     key = random.PRNGKey(0)
     layer_sizes = [2,16,32,16,1]
-    for NN in [FCN, AdaptiveFCN, SIREN, AdaptiveSIREN]:
+    for NN in [FCN, AdaptiveFCN, SIREN, AdaptiveSIREN, FourierFCN]:
         network = NN
-        ps_ = network.init_params(key, layer_sizes)
-        params = {"static":{"network":ps_[0]}, "trainable":{"network":{"subdomain":ps_[1]}}}
+        if NN is FourierFCN:
+            ps_ = network.init_params(key, layer_sizes, 0, 1, 10)
+        else:
+            ps_ = network.init_params(key, layer_sizes)
+        params = {"static":{"network":{"subdomain":ps_[0]}},
+                  "trainable":{"network":{"subdomain":ps_[1]}}}
         print(x.shape, network.network_fn(params, x).shape, NN.__name__)
