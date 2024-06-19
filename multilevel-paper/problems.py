@@ -14,12 +14,18 @@ from fbpinns.traditional_solutions.helmholtz_solver import helmholtz_solver
 class Laplace1D_quadratic(Problem):
 
     @staticmethod
-    def init_params(sd=0.2):
+    def init_params(sd=0.2, adaptive_weights=()):
         static_params = {
             "dims":(1,1),
             "sd":sd,
             }
-        return static_params, {}
+        if adaptive_weights:
+            trainable_params = {
+                "adaptive_weights": [jnp.ones(batch_shape, dtype=float) for batch_shape in adaptive_weights]
+                }
+        else:
+            trainable_params = {}
+        return static_params, trainable_params
 
     @staticmethod
     def sample_constraints(all_params, domain, key, sampler, batch_shapes):
@@ -42,7 +48,10 @@ class Laplace1D_quadratic(Problem):
         _, uxx = constraints[0]
         f = 8
         phys = f + uxx
-        return jnp.mean(phys**2)
+        phys2 = phys**2
+        if "problem" in all_params["trainable"] and "adaptive_weights" in all_params["trainable"]["problem"]:
+            phys2 = all_params["trainable"]["problem"]["adaptive_weights"][0].reshape(-1,1)*phys2
+        return jnp.mean(phys2)
 
     @staticmethod
     def exact_solution(all_params, x_batch, batch_shape=None):
@@ -54,12 +63,18 @@ class Laplace1D_quadratic(Problem):
 class Laplace2D_quadratic(Problem):
 
     @staticmethod
-    def init_params(sd=0.2):
+    def init_params(sd=0.2, adaptive_weights=()):
         static_params = {
             "dims":(1,2),
             "sd":sd,
             }
-        return static_params, {}
+        if adaptive_weights:
+            trainable_params = {
+                "adaptive_weights": [jnp.ones(batch_shape, dtype=float) for batch_shape in adaptive_weights]
+                }
+        else:
+            trainable_params = {}
+        return static_params, trainable_params
 
     @staticmethod
     def sample_constraints(all_params, domain, key, sampler, batch_shapes):
@@ -84,7 +99,10 @@ class Laplace2D_quadratic(Problem):
         x, y = x_batch[:,0:1], x_batch[:,1:2]
         f = 32*(x*(1-x)+y*(1-y))
         phys = f + uxx + uyy
-        return jnp.mean(phys**2)
+        phys2 = phys**2
+        if "problem" in all_params["trainable"] and "adaptive_weights" in all_params["trainable"]["problem"]:
+            phys2 = all_params["trainable"]["problem"]["adaptive_weights"][0].reshape(-1,1)*phys2
+        return jnp.mean(phys2)
 
     @staticmethod
     def exact_solution(all_params, x_batch, batch_shape=None):
@@ -96,14 +114,20 @@ class Laplace2D_quadratic(Problem):
 class Laplace2D_multiscale(Problem):
 
     @staticmethod
-    def init_params(sd=0.2, omegas=[2,4,8,16]):
+    def init_params(sd=0.2, omegas=[2,4,8,16], adaptive_weights=()):
         static_params = {
             "dims":(1,2),
             "sd":sd,
             "omegas":omegas,
             "ns":len(omegas),
             }
-        return static_params, {}
+        if adaptive_weights:
+            trainable_params = {
+                "adaptive_weights": [jnp.ones(batch_shape, dtype=float) for batch_shape in adaptive_weights]
+                }
+        else:
+            trainable_params = {}
+        return static_params, trainable_params
 
     @staticmethod
     def sample_constraints(all_params, domain, key, sampler, batch_shapes):
@@ -130,7 +154,10 @@ class Laplace2D_multiscale(Problem):
         sin, pi, omegas, ns = jnp.sin, jnp.pi, params["omegas"], params["ns"]
         f = (2/ns)*jnp.sum(jnp.stack([((omega*pi)**2)*sin(omega*pi*x)*sin(omega*pi*y) for omega in omegas], axis=0), axis=0)
         phys = f + uxx + uyy
-        return jnp.mean(phys**2)
+        phys2 = phys**2
+        if "problem" in all_params["trainable"] and "adaptive_weights" in all_params["trainable"]["problem"]:
+            phys2 = all_params["trainable"]["problem"]["adaptive_weights"][0].reshape(-1,1)*phys2
+        return jnp.mean(phys2)
 
     @staticmethod
     def exact_solution(all_params, x_batch, batch_shape=None):
@@ -144,7 +171,7 @@ class Laplace2D_multiscale(Problem):
 class Helmholtz2D(Problem):
 
     @staticmethod
-    def init_params(c=1, w=1, sd=0.2):
+    def init_params(c=1, w=1, sd=0.2, adaptive_weights=()):
         if c == "marmousi":
             c = jnp.array(np.load("marmousi_crop_sm.npy")[:,::-1])
             c = (c/jnp.median(c), Helmholtz2D._c_discrete, "discrete")
@@ -156,7 +183,13 @@ class Helmholtz2D(Problem):
             "c":c,
             "w":w,
             }
-        return static_params, {}
+        if adaptive_weights:
+            trainable_params = {
+                "adaptive_weights": [jnp.ones(batch_shape, dtype=float) for batch_shape in adaptive_weights]
+                }
+        else:
+            trainable_params = {}
+        return static_params, trainable_params
 
     @staticmethod
     def sample_constraints(all_params, domain, key, sampler, batch_shapes):
@@ -186,7 +219,10 @@ class Helmholtz2D(Problem):
 
         f = (1/sqrt(((2*pi)**2)*((sd**2)**2)))*exp(-0.5*(((x-0.5)/sd)**2 + ((y-0.5)/sd)**2))
         phys = (uxx + uyy) + ((w/c)**2)*u - f
-        return jnp.mean(phys**2)
+        phys2 = phys**2
+        if "problem" in all_params["trainable"] and "adaptive_weights" in all_params["trainable"]["problem"]:
+            phys2 = all_params["trainable"]["problem"]["adaptive_weights"][0].reshape(-1,1)*phys2
+        return jnp.mean(phys2)
 
     @staticmethod
     def exact_solution(all_params, x_batch, batch_shape=None):
