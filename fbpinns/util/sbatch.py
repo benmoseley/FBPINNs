@@ -7,6 +7,7 @@ import sys
 import pickle
 
 from fbpinns.trainers import FBPINNTrainer, PINNTrainer
+from fbpinns.self_adaptive import SelfAdaptivePINNTrainer
 from fbpinns.constants import Constants
 
 
@@ -47,9 +48,12 @@ def run():
     constants_file, trainer = sys.argv[1:]
 
     # get trainer
-    if trainer not in ["FBPINN", "PINN"]:
+    if trainer not in ["FBPINN", "PINN", "SelfAdaptivePINN"]:
         raise Exception(f"ERRROR: unexpected trainer: {trainer}")
-    trainer = {"FBPINN":FBPINNTrainer, "PINN": PINNTrainer}[trainer]
+    trainer = {"FBPINN":FBPINNTrainer,
+               "PINN": PINNTrainer,
+               "SelfAdaptivePINN": SelfAdaptivePINNTrainer,
+               }[trainer]
 
     # get constants
     with open(constants_file, "rb") as f:
