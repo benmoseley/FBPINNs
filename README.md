@@ -216,14 +216,16 @@ volume = {49},
 year = {2023}
 }
 
-@article{Dolean2023,
-arxivId = {2306.05486},
+@article{Dolean2024,
 author = {Dolean, Victorita and Heinlein, Alexander and Mishra, Siddhartha and Moseley, Ben},
-journal = {arXiv},
-month = {jun},
+doi = {https://doi.org/10.1016/j.cma.2024.117116},
+issn = {0045-7825},
+journal = {Computer Methods in Applied Mechanics and Engineering},
+pages = {117116},
 title = {{Multilevel domain decomposition-based architectures for physics-informed neural networks}},
-url = {https://arxiv.org/abs/2306.05486v1 http://arxiv.org/abs/2306.05486},
-year = {2023}
+url = {https://www.sciencedirect.com/science/article/pii/S0045782524003724},
+volume = {429},
+year = {2024}
 }
 ```
 
@@ -231,7 +233,7 @@ year = {2023}
 
 To reproduce the exact results of our original FBPINN paper: *[Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations](https://link.springer.com/article/10.1007/s10444-023-10065-9), B. Moseley, T. Nissen-Meyer and A. Markham, Jul 2023 Advances in Computational Mathematics*, you will need to use the legacy PyTorch FBPINN implementation, which is available at this [commit](https://github.com/benmoseley/FBPINNs/tree/pytorch).
 
-To reproduce the results of our paper: [*Multilevel domain decomposition-based architectures for physics-informed neural networks*](http://arxiv.org/abs/2306.05486), please see this [branch](https://github.com/benmoseley/FBPINNs/tree/multilevel-paper/multilevel-paper).
+To reproduce the results of our paper: [*Multilevel domain decomposition-based architectures for physics-informed neural networks*](https://doi.org/10.1016/j.cma.2024.117116), please see this [branch](https://github.com/benmoseley/FBPINNs/tree/multilevel-paper/multilevel-paper).
 
 
 ## Further questions?
