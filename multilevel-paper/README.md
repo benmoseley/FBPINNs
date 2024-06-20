@@ -1,6 +1,6 @@
 # Multilevel domain decomposition-based architectures for physics-informed neural networks
 
-This branch reproduces the results of our paper: [Multilevel domain decomposition-based architectures for physics-informed neural networks](http://arxiv.org/abs/2306.05486).
+This branch reproduces the results of our paper: [Multilevel domain decomposition-based architectures for physics-informed neural networks](https://doi.org/10.1016/j.cma.2024.117116).
 
 ## Reproducing our results
 
