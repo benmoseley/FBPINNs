@@ -23,6 +23,9 @@ from fbpinns.util.logger import logger
 from fbpinns.util.jax_util import tree_index, total_size, str_tensor, partition, combine
 
 
+from jax.sharding import PositionalSharding
+from jax.experimental import mesh_utils
+
 # LABELLING CONVENTIONS
 
 # xd = dimensionality of point
@@ -381,7 +384,6 @@ def get_inputs(x_batch, active, all_params, decomposition):
     np = jnp.stack([n_take, pous[m_take,0]], axis=-1).astype(int)# points and pous
     logger.debug(str_tensor(np))
     npu,p_take = jnp.unique(np, axis=0, return_inverse=True)# unique points and pous (sorted), point-pou takes
-    p_take = p_take.reshape(-1)# (!) fixes output shape inconsistency after jax 0.4.24
     np_take = npu[:,0]
     logger.debug(str_tensor(p_take))
     logger.debug(str_tensor(np_take))
@@ -601,9 +603,8 @@ class FBPINNTrainer(_Trainer):
         # initialise subdomain network params
         network = c.network
         key, *subkeys = random.split(key, all_params["static"]["decomposition"]["m"]+1)
-        args_ = c.network_init_kwargs.values()
-        ps_ = vmap(network.init_params, in_axes=(0,)+(None,)*len(args_))(jnp.array(subkeys), *args_)
-        if ps_[0]: all_params["static"]["network"] = {"subdomain": ps_[0]}# add subdomain key
+        ps_ = vmap(network.init_params, in_axes=(0, None))(jnp.array(subkeys), *c.network_init_kwargs.values())
+        if ps_[0]: all_params["static"]["network"] = tree_index(ps_[0],0)# grab first set of static params only
         if ps_[1]: all_params["trainable"]["network"] = {"subdomain": ps_[1]}# add subdomain key
         logger.debug("all_params")
         logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params))
@@ -642,7 +643,68 @@ class FBPINNTrainer(_Trainer):
                 # then get new inputs to update step
                 active, merge_active, active_opt_states, active_params, fixed_params, static_params, takess, constraints, x_batch = \
                      self._get_update_inputs(i, active, all_params, all_opt_states, x_batch_global, constraints_global, constraint_fs_global, constraint_offsets_global, decomposition, problem)
+                
+                
+                
+                ###*******SHARDING START*********###
+                nDevices = jax.local_device_count()
+                sharding = PositionalSharding(mesh_utils.create_device_mesh((nDevices, )))
 
+
+                def pad_array(arr):
+                    pad_width = nDevices - (arr.shape[0] % nDevices)
+                    if pad_width == nDevices:
+                        pad_width = 0
+                    return jnp.pad(arr, (0, pad_width), mode='constant') 
+                
+                def shard_layer_params(layer, sharding):
+                    weights, biases = layer
+                    # pad_width = nDevices - (weights.shape[0] % nDevices)
+                    # if pad_width != nDevices:
+                    #     weights = jnp.pad(weights, ((0,pad_width),(0,0),(0,0)), mode='constant')
+                    #     biases = jnp.pad(biases, ((0,pad_width),(0,0)), mode='constant')
+                    sharded_weights = jax.device_put(weights, sharding.reshape((nDevices,1,1 )))
+                    sharded_biases  = jax.device_put(biases, sharding.reshape((nDevices, 1)))
+                    return (sharded_weights, sharded_biases)
+
+                
+
+                for i, takes in enumerate(takess):
+                    m_take, n_take, p_take, np_take, npou   = takes 
+                    
+                    n_take         = jax.device_put(pad_array(n_take), sharding.reshape((nDevices,)))
+                    m_take         = jax.device_put(pad_array(m_take), sharding.reshape((nDevices,)))
+                    p_take         = jax.device_put(pad_array(p_take), sharding.reshape((nDevices,)))
+                    np_take        = jax.device_put(np_take, sharding.replicate())
+                    npou           = jax.device_put(npou, sharding.replicate())
+                    
+                    takess[i] = (m_take, n_take, p_take, np_take, npou)
+
+                
+                static_params["decomposition"]["subdomain"]["params"] = jax.device_put(static_params["decomposition"]["subdomain"]["params"], sharding.replicate())
+                
+                
+                active_layers = active_params["network"]["subdomain"]["layers"]
+                sharded_layers = [shard_layer_params(layer, sharding) for layer in active_layers]
+                active_params["network"]["subdomain"]["layers"] = sharded_layers
+                
+
+                opt_layers = active_opt_states[0][1]["network"]["subdomain"]["layers"]
+                sharded_opt = [shard_layer_params(layer, sharding) for layer in opt_layers]
+                active_opt_states[0][1]["network"]["subdomain"]["layers"] = sharded_opt
+
+                opt_layers = active_opt_states[0][2]["network"]["subdomain"]["layers"]
+                sharded_opt = [shard_layer_params(layer, sharding) for layer in opt_layers]
+                active_opt_states[0][2]["network"]["subdomain"]["layers"] = sharded_opt
+                ###*******SHARDING END*********###
+                
+                
+                
+                
+                
+                
+                
+                
                 # AOT compile update function
                 startc = time.time()
                 logger.info(f"[i: {i}/{self.c.n_steps}] Compiling update step..")
@@ -807,7 +869,7 @@ class PINNTrainer(_Trainer):
         network = c.network
         key, subkey = random.split(key)
         ps_ = network.init_params(key=subkey, **c.network_init_kwargs)
-        if ps_[0]: all_params["static"]["network"] = {"subdomain": ps_[0]}# add subdomain key
+        if ps_[0]: all_params["static"]["network"] = ps_[0]
         if ps_[1]: all_params["trainable"]["network"] = {"subdomain": ps_[1]}# add subdomain key
         logger.debug("all_params")
         logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params))
