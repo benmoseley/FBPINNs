@@ -384,6 +384,7 @@ def get_inputs(x_batch, active, all_params, decomposition):
     np = jnp.stack([n_take, pous[m_take,0]], axis=-1).astype(int)# points and pous
     logger.debug(str_tensor(np))
     npu,p_take = jnp.unique(np, axis=0, return_inverse=True)# unique points and pous (sorted), point-pou takes
+    p_take = p_take.reshape(-1)# (!) fixes output shape inconsistency after jax 0.4.24
     np_take = npu[:,0]
     logger.debug(str_tensor(p_take))
     logger.debug(str_tensor(np_take))
@@ -603,8 +604,9 @@ class FBPINNTrainer(_Trainer):
         # initialise subdomain network params
         network = c.network
         key, *subkeys = random.split(key, all_params["static"]["decomposition"]["m"]+1)
-        ps_ = vmap(network.init_params, in_axes=(0, None))(jnp.array(subkeys), *c.network_init_kwargs.values())
-        if ps_[0]: all_params["static"]["network"] = tree_index(ps_[0],0)# grab first set of static params only
+        args_ = c.network_init_kwargs.values()
+        ps_ = vmap(network.init_params, in_axes=(0,)+(None,)*len(args_))(jnp.array(subkeys), *args_)
+        if ps_[0]: all_params["static"]["network"] = {"subdomain": ps_[0]}# add subdomain key
         if ps_[1]: all_params["trainable"]["network"] = {"subdomain": ps_[1]}# add subdomain key
         logger.debug("all_params")
         logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params))
@@ -869,7 +871,7 @@ class PINNTrainer(_Trainer):
         network = c.network
         key, subkey = random.split(key)
         ps_ = network.init_params(key=subkey, **c.network_init_kwargs)
-        if ps_[0]: all_params["static"]["network"] = ps_[0]
+        if ps_[0]: all_params["static"]["network"] = {"subdomain": ps_[0]}# add subdomain key
         if ps_[1]: all_params["trainable"]["network"] = {"subdomain": ps_[1]}# add subdomain key
         logger.debug("all_params")
         logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params))
