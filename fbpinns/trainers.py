@@ -20,7 +20,7 @@ import numpy as np
 from fbpinns.trainers_base import _Trainer
 from fbpinns import networks, plot_trainer
 from fbpinns.util.logger import logger
-from fbpinns.util.jax_util import tree_index, total_size, str_tensor, partition, combine
+from fbpinns.util.jax_util import tree_index, total_size, str_tensor, partition, combine, flops_cost_analysis
 
 
 # LABELLING CONVENTIONS
@@ -651,8 +651,7 @@ class FBPINNTrainer(_Trainer):
                                              active_params, fixed_params, static_params_dynamic, static_params_static,
                                              takess, constraints, model_fns, jmapss, loss_fn).compile()
                 logger.info(f"[i: {i}/{self.c.n_steps}] Compiling done ({time.time()-startc:.2f} s)")
-                cost_ = update.cost_analysis()
-                p,f = total_size(active_params["network"]), cost_[0]["flops"] if (cost_ and "flops" in cost_[0]) else 0
+                p,f = total_size(active_params["network"]), flops_cost_analysis(update.cost_analysis())
                 logger.debug("p, f")
                 logger.debug((p,f))
 
@@ -837,8 +836,7 @@ class PINNTrainer(_Trainer):
                                    active_params, static_params_dynamic, static_params_static,
                                    constraints, model_fns, jmapss, loss_fn).compile()
         logger.info(f"[i: {0}/{self.c.n_steps}] Compiling done ({time.time()-startc:.2f} s)")
-        cost_ = update.cost_analysis()
-        p,f = total_size(active_params["network"]), cost_[0]["flops"] if (cost_ and "flops" in cost_[0]) else 0
+        p,f = total_size(active_params["network"]), flops_cost_analysis(update.cost_analysis())
         logger.debug("p, f")
         logger.debug((p,f))
 

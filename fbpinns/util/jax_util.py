@@ -40,10 +40,20 @@ def total_size(pytree):
     p = sum([p.size for p in jax.tree_util.tree_leaves(pytree)])
     return p
 
+def flops_cost_analysis(cost_analysis):
+    "Try to retrieve flops from jit(fn).lower().cost_analysis()"
+    if cost_analysis:
+        if isinstance(cost_analysis, list):# backwards compatibility (before jax 0.4.38)
+            cost_analysis = cost_analysis[0]
+        if isinstance(cost_analysis, dict):
+            if "flops" in cost_analysis:
+                f = cost_analysis["flops"]
+                return int(f)
+    return 0
 
 if __name__ == "__main__":
 
-    f = lambda x: x
+    f = lambda x: x**2 + 5
     class C:
         pass
     pytree = {"a":[jnp.arange(10), None, "asd"], "b":(0, True, f, C, C(), [0,1], np.arange(3))}
@@ -63,3 +73,5 @@ if __name__ == "__main__":
     print()
 
     print(str_tensor(jnp.arange(10)))
+
+    print(flops_cost_analysis(jax.jit(f).lower(jnp.arange(10)).cost_analysis()))
