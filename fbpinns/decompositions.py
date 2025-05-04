@@ -15,7 +15,8 @@ This module is used by constants.py (and subsequently trainers.py)
 """
 
 import jax.numpy as jnp
-from jax import vmap, tree_map
+from jax import vmap
+from jax.tree_util import tree_map
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.collections as mcoll

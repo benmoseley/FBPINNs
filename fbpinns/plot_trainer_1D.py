@@ -25,7 +25,7 @@ def _plot_setup(x_batch_test, u_exact):
 def _to_numpy(f):
     # converts jnp arrays to np arrays
     def wrapper(*args):
-        args = jax.tree_map(lambda a: np.array(a) if isinstance(a, jnp.ndarray) else a, args)
+        args = jax.tree_util.tree_map(lambda a: np.array(a) if isinstance(a, jnp.ndarray) else a, args)
         return f(*args)
     return wrapper
 

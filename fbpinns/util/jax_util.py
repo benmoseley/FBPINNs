@@ -33,7 +33,7 @@ def str_tensor(x):
 
 def tree_index(pytree, i):
     "Index element in tree"
-    return jax.tree_map(lambda x: x[i], pytree)
+    return jax.tree_util.tree_map(lambda x: x[i], pytree)
 
 def total_size(pytree):
     "Returns total number of elements in pytree of arrays"

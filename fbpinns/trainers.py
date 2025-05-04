@@ -139,18 +139,18 @@ def FBPINN_model(all_params, x_batch, takes, model_fns, verbose=True):
 
     # take subdomain params
     d = all_params
-    all_params_take = {t_k: {cl_k: {k: jax.tree_map(lambda p:p[m_take], d[t_k][cl_k][k]) if k=="subdomain" else d[t_k][cl_k][k]
+    all_params_take = {t_k: {cl_k: {k: jax.tree_util.tree_map(lambda p:p[m_take], d[t_k][cl_k][k]) if k=="subdomain" else d[t_k][cl_k][k]
         for k in d[t_k][cl_k]}
         for cl_k in d[t_k]}
         for t_k in ["static", "trainable"]}
-    f = {t_k: {cl_k: {k: jax.tree_map(lambda p: 0, d[t_k][cl_k][k]) if k=="subdomain" else jax.tree_map(lambda p: None, d[t_k][cl_k][k])
+    f = {t_k: {cl_k: {k: jax.tree_util.tree_map(lambda p: 0, d[t_k][cl_k][k]) if k=="subdomain" else jax.tree_util.tree_map(lambda p: None, d[t_k][cl_k][k])
         for k in d[t_k][cl_k]}
         for cl_k in d[t_k]}
         for t_k in ["static", "trainable"]}
     logger.debug("all_params")
-    logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params))
+    logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), all_params))
     logger.debug("all_params_take")
-    logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params_take))
+    logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), all_params_take))
     logger.debug("vmap f")
     logger.debug(f)
 
@@ -250,7 +250,7 @@ def FBPINN_loss(active_params, fixed_params, static_params, takess, constraints,
 
     # add fixed params to active, recombine all_params
     d, da = active_params, fixed_params
-    trainable_params = {cl_k: {k: jax.tree_map(lambda p1, p2:jnp.concatenate([p1,p2],0), d[cl_k][k], da[cl_k][k]) if k=="subdomain" else d[cl_k][k]
+    trainable_params = {cl_k: {k: jax.tree_util.tree_map(lambda p1, p2:jnp.concatenate([p1,p2],0), d[cl_k][k], da[cl_k][k]) if k=="subdomain" else d[cl_k][k]
         for k in d[cl_k]}
         for cl_k in d}
     all_params = {"static":static_params, "trainable":trainable_params}
@@ -393,17 +393,17 @@ def get_inputs(x_batch, active, all_params, decomposition):
     # cut active and fixed parameter trees
     def cut_active(d):
         "Cuts active_ims from param dict"
-        return {cl_k: {k: jax.tree_map(lambda p:p[active_ims], d[cl_k][k]) if k=="subdomain" else d[cl_k][k]
+        return {cl_k: {k: jax.tree_util.tree_map(lambda p:p[active_ims], d[cl_k][k]) if k=="subdomain" else d[cl_k][k]
                 for k in d[cl_k]}
                 for cl_k in d}
     def cut_fixed(d):
         "Cuts fixed_ims from param dict"
-        return {cl_k: {k: jax.tree_map(lambda p:p[fixed_ims],  d[cl_k][k]) if k=="subdomain" else d[cl_k][k]
+        return {cl_k: {k: jax.tree_util.tree_map(lambda p:p[fixed_ims],  d[cl_k][k]) if k=="subdomain" else d[cl_k][k]
                 for k in d[cl_k]}
                 for cl_k in d}
     def cut_all(d):
         "Cuts all_ims from param dict"
-        return {cl_k: {k: jax.tree_map(lambda p:p[all_ims],    d[cl_k][k]) if k=="subdomain" else d[cl_k][k]
+        return {cl_k: {k: jax.tree_util.tree_map(lambda p:p[all_ims],    d[cl_k][k]) if k=="subdomain" else d[cl_k][k]
                 for k in d[cl_k]}
                 for cl_k in d}
     def merge_active(da, d):
@@ -411,7 +411,7 @@ def get_inputs(x_batch, active, all_params, decomposition):
         for cl_k in d:
             for k in d[cl_k]:
                 if k=="subdomain":
-                    d[cl_k][k] = jax.tree_map(lambda pa, p: p.copy().at[active_ims].set(pa), da[cl_k][k], d[cl_k][k])
+                    d[cl_k][k] = jax.tree_util.tree_map(lambda pa, p: p.copy().at[active_ims].set(pa), da[cl_k][k], d[cl_k][k])
                 else:
                     d[cl_k][k] = da[cl_k][k]
         return d
@@ -430,7 +430,7 @@ def _common_train_initialisation(c, key, all_params, problem, domain):
     optimiser = optax.adam(**c.optimiser_kwargs)
     all_opt_states = optimiser.init(all_params["trainable"])
     logger.debug("all_opt_states")
-    logger.debug(jax.tree_map(lambda x: str_tensor(x), all_opt_states))
+    logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), all_opt_states))
     optimiser_fn, loss_fn = optimiser.update, problem.loss_fn
 
     # get global constraints (training points)
@@ -450,7 +450,7 @@ def _common_train_initialisation(c, key, all_params, problem, domain):
     constraints_global = [constraint_[:-1] for constraint_ in constraints_global]
     logger.info(f"Total number of constraints: {len(constraints_global)}")
     logger.debug("constraints_global")
-    logger.debug(jax.tree_map(lambda x: str_tensor(x), constraints_global))
+    logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), constraints_global))
     logger.debug(constraint_offsets_global)
     logger.debug(str_tensor(constraint_fs_global))
     logger.debug(required_ujss)
@@ -500,8 +500,8 @@ class FBPINNTrainer(_Trainer):
                         for c_ in constraints_global[ic]]
                        for ic in range(len(constraints_global))]# cut constraints
         logger.debug("constraints")
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), constraints))
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), constraint_ips))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), constraints))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), constraint_ips))
         logger.debug(str_tensor(constraint_fs))
 
         return x_batch, constraints, constraint_fs, constraint_ips
@@ -530,13 +530,13 @@ class FBPINNTrainer(_Trainer):
         static_params = cut_all(all_params["static"])
         active_opt_states = tree_map_dicts(cut_active, all_opt_states)# because all_opt_states has more complex structure
         logger.debug("active_params")
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), active_params))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), active_params))
         logger.debug("fixed_params")
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), fixed_params))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), fixed_params))
         logger.debug("static_params")
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), static_params))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), static_params))
         logger.debug("active_opt_states")
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), active_opt_states))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), active_opt_states))
 
         # split takes into many using constraint_ips (multiple constraints)
         # choice 1: use serial constraints - to stop too many gradients
@@ -606,7 +606,7 @@ class FBPINNTrainer(_Trainer):
         if ps_[0]: all_params["static"]["network"] = {"subdomain": ps_[0]}# add subdomain key
         if ps_[1]: all_params["trainable"]["network"] = {"subdomain": ps_[1]}# add subdomain key
         logger.debug("all_params")
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), all_params))
         model_fns = (decomposition.norm_fn, network.network_fn, decomposition.unnorm_fn, decomposition.window_fn, problem.constraining_fn)
 
         # initialise scheduler
@@ -809,7 +809,7 @@ class PINNTrainer(_Trainer):
         if ps_[0]: all_params["static"]["network"] = {"subdomain": ps_[0]}# add subdomain key
         if ps_[1]: all_params["trainable"]["network"] = {"subdomain": ps_[1]}# add subdomain key
         logger.debug("all_params")
-        logger.debug(jax.tree_map(lambda x: str_tensor(x), all_params))
+        logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), all_params))
 
         # define unnorm function
         mu_, sd_ = c.decomposition_init_kwargs["unnorm"]

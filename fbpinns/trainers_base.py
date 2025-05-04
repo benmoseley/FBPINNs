@@ -64,7 +64,7 @@ class _Trainer:
     def _save_model(self, i, model):
         "Saves a model"
 
-        model = jax.tree_map(lambda x: np.array(x) if isinstance(x, jnp.ndarray) else x, model)# convert jax arrays to np
+        model = jax.tree_util.tree_map(lambda x: np.array(x) if isinstance(x, jnp.ndarray) else x, model)# convert jax arrays to np
         with open(self.c.model_out_dir+f"model_{i:08d}.jax", "wb") as f:
             pickle.dump(model, f)
 

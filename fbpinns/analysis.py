@@ -41,7 +41,7 @@ def load_model(run, i=None, rootdir="results/"):
         model = pickle.load(f)
 
     # convert np arrays to jax
-    model = jax.tree_map(lambda x: jnp.array(x) if isinstance(x, np.ndarray) else x, model)
+    model = jax.tree_util.tree_map(lambda x: jnp.array(x) if isinstance(x, np.ndarray) else x, model)
 
     return c, model
 
