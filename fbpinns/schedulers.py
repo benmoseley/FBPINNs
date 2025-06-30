@@ -82,7 +82,7 @@ class _SubspacePointSchedulerRectangularND(ActiveScheduler):
 
         # whether point is inside model
         c_inside = (point >= xmins) & (point <= xmaxs)# (m, cd) point is broadcast
-        c_inside = np.product(c_inside, axis=1).astype(bool)# (m) must be true across all dims
+        c_inside = np.prod(c_inside, axis=1).astype(bool)# (m) must be true across all dims
 
         # get closest point on rectangle to point
         pmin = np.clip(point, xmins, xmaxs)# (m, cd) point is broadcast
