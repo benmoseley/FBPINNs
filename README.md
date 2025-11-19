@@ -173,6 +173,9 @@ See the [examples](https://github.com/benmoseley/FBPINNs/tree/main/examples) fol
 - how to solve an inverse problem
 - how to use subdomain scheduling
 
+### Workshop on Scalable PINNs and minimal FBPINN implementation
+
+Check out our [scalable PINNs workshop](https://github.com/benmoseley/scalable-pinns-workshop), where we show how to code a minimal FBPINN and ELM-FBPINN in JAX.
 
 ## FAQs
 
@@ -226,6 +229,17 @@ title = {{Multilevel domain decomposition-based architectures for physics-inform
 url = {https://www.sciencedirect.com/science/article/pii/S0045782524003724},
 volume = {429},
 year = {2024}
+}
+
+@article{VanBeek2025,
+author = {van Beek, Jan Willem and Dolean, Victorita and Moseley, Ben},
+archivePrefix = {arXiv},
+arxivId = {2506.17626},
+eprint = {2506.17626},
+journal = {arXiv},
+title = {{Local feature filtering for scalable and well-conditioned Random Feature Methods}},
+url = {https://arxiv.org/pdf/2506.17626},
+year = {2025}
 }
 ```
 
