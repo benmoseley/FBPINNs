@@ -29,6 +29,10 @@ def load_model(run, i=None, rootdir="results/"):
         c_dict = pickle.load(f)
     c = DictToObj(**c_dict, copy=True)
 
+    # check model dir is not empty
+    if not os.listdir(model_dir):
+        raise FileNotFoundError(f"Model dir empty for run {run}")
+
     # get last timestep to load
     if i is None:
         last_file = sorted(os.listdir(model_dir))[-1]

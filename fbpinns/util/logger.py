@@ -6,39 +6,67 @@ import sys
 import logging
 
 
-def switch_to_file_logger(filename):
-    "Switch logger to file logger"
-    logger.removeHandler(ch)
-    fh = logging.FileHandler(filename)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    return logger
-
 # see here for explanation: https://docs.python.org/3/howto/logging.html
+
+
+def attach_stdout_handler():
+    """Attach a handler to stdout if not already present."""
+
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler) and handler.stream is sys.stdout:
+            return
+
+    h = logging.StreamHandler(stream=sys.stdout)
+    h.setLevel(logging.DEBUG)
+    h.setFormatter(formatter)
+    logger.addHandler(h)
+
+def unattach_stdout_handler():
+    """Remove stdout handler"""
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler) and handler.stream is sys.stdout:
+            logger.removeHandler(handler)
+
+class FileLogging:
+    """Context manager to temporarily attach a file logger."""
+
+    def __init__(self, filename):
+        self.filename = filename
+        self._handler = None
+
+    def __enter__(self):
+        # Check if already attached
+        for handler in logger.handlers:
+            if isinstance(handler, logging.FileHandler) and handler.baseFilename == self.filename:
+                self._handler = handler
+                return
+
+        # Attach new handler
+        h = logging.FileHandler(self.filename, mode='w')
+        h.setLevel(logging.DEBUG)
+        h.setFormatter(formatter)
+        logger.addHandler(h)
+        self._handler = h
+
+    def __exit__(self, *args):
+        if self._handler:
+            logger.removeHandler(self._handler)
+            self._handler.close()
 
 
 # create logger
 logger = logging.getLogger('fbpinns')
 logger.setLevel(logging.INFO)
 
-# create console handler and set level to debug
-ch = logging.StreamHandler(stream=sys.stdout)
-ch.setLevel(logging.DEBUG)
+# make sure the logger doesn't propagate to its parents (standalone logger)
+logger.propagate = False
 
 # create formatter
 formatter = logging.Formatter(fmt='[%(levelname)s] %(asctime)s - %(message)s',
                               datefmt='%Y-%m-%d %H:%M:%S')
 
-# add formatter to ch
-ch.setFormatter(formatter)
-
-# add ch to logger
-if not logger.handlers:
-    logger.addHandler(ch)
-
-# make sure the logger doesn't propagate to its parents (standalone logger)
-logger.propagate = False
+# set stdout handler
+attach_stdout_handler()
 
 
 if __name__ == "__main__":
@@ -47,3 +75,7 @@ if __name__ == "__main__":
     logger.setLevel("DEBUG")
     logger.debug("hello world")
     logger.info("hello world")
+    unattach_stdout_handler()
+    with FileLogging("logger.txt"):
+        logger.info("hello world")
+    attach_stdout_handler()

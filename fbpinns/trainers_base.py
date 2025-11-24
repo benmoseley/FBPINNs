@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import IPython.display
 from tensorboardX import SummaryWriter
 
-from fbpinns.util.logger import logger, switch_to_file_logger
+from fbpinns.util.logger import logger, unattach_stdout_handler, FileLogging
 
 
 class _Trainer:
@@ -84,14 +84,10 @@ def train_models_multiprocess(ip, devices, c, Trainer, wait=0):
     # switch logger to a file logger
     tag = os.environ["STY"].split(".")[-1] if "STY" in os.environ else "main"# grab socket name if using screen
     logfile = f"screenlog.{tag:s}.{ip:d}.log"
-    switch_to_file_logger(logfile)
-
     # start training on specific device
     c.device = devices[ip]# set device to run on, based on process id
     c.show_figures = c.clear_output = False# make sure plots are not shown
-    run = Trainer(c)
-    run.train()
-
-
-
-
+    unattach_stdout_handler()
+    with FileLogging(logfile):
+        run = Trainer(c)
+        run.train()

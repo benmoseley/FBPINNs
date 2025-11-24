@@ -427,7 +427,7 @@ def _common_train_initialisation(c, key, all_params, problem, domain):
         logger.info(f'\t{k}: {total_size(all_params["trainable"][k]):,}')
 
     # initialise optimiser
-    optimiser = optax.adam(**c.optimiser_kwargs)
+    optimiser = c.optimiser(**c.optimiser_kwargs)
     all_opt_states = optimiser.init(all_params["trainable"])
     logger.debug("all_opt_states")
     logger.debug(jax.tree_util.tree_map(lambda x: str_tensor(x), all_opt_states))
@@ -624,9 +624,23 @@ class FBPINNTrainer(_Trainer):
         test_inputs = (takes_, all_ims_, cut_all_)
 
         # train loop
+        return self._train_loop(scheduler,
+                        all_params, all_opt_states,
+                        x_batch_global, constraints_global, constraint_fs_global, constraint_offsets_global,
+                        decomposition, problem, optimiser_fn, model_fns, jmapss, loss_fn,
+                        u_exact, x_batch_test, test_inputs,
+                        writer)
+
+    def _train_loop(self, scheduler,
+                    all_params, all_opt_states,
+                    x_batch_global, constraints_global, constraint_fs_global, constraint_offsets_global,
+                    decomposition, problem, optimiser_fn, model_fns, jmapss, loss_fn,
+                    u_exact, x_batch_test, test_inputs,
+                    writer):
+
         pstep, fstep, u_test_losses = 0, 0, []
         start0, start1, report_time = time.time(), time.time(), 0.
-        merge_active, active_params, active_opt_states, fixed_params = None, None, None, None
+        merge_active, active_params, active_opt_states = None, None, None
         lossval = None
         for i,active_ in enumerate(scheduler):
 
@@ -765,7 +779,7 @@ class FBPINNTrainer(_Trainer):
         writer.add_scalar("loss/test/l1_istep", l1, i)
 
         # create figures
-        if i % (c.test_freq * 5) == 0:
+        if i % (c.test_freq * 1) == 0:
             fs = plot_trainer.plot("FBPINN", all_params["static"]["problem"]["dims"],
                 x_batch_test, u_exact, u_test, us_test, ws_test, us_raw_test, x_batch, all_params, i, active, decomposition, n_test)
             if fs is not None:
@@ -934,7 +948,7 @@ class PINNTrainer(_Trainer):
         writer.add_scalar("loss/test/l1_istep", l1, i)
 
         # create figures
-        if i % (c.test_freq * 5) == 0:
+        if i % (c.test_freq * 1) == 0:
             fs = plot_trainer.plot("PINN", all_params["static"]["problem"]["dims"],
                 x_batch_test, u_exact, u_test, u_raw_test, x_batch, all_params, i, n_test)
             if fs is not None:

@@ -354,6 +354,7 @@ class WaveEquationConstantVelocity3D(Problem):
         du
         --(x,y,0) = 0
         dt
+        u(-1,y,t) = u(+1,y,t) = u(x,-1,t) = u(x,+1,t) = 0
     """
 
     @staticmethod
@@ -386,16 +387,21 @@ class WaveEquationConstantVelocity3D(Problem):
         x, t = x_batch[:,0:2], x_batch[:,2:3]
         tanh, exp = jax.nn.tanh, jnp.exp
 
+        # form time-decaying anzatz
+        t1 = source[:,2].min()/c0
+        bt = tanh(2.5*t/t1)**2
+        x1 = source[:,2].min()
+        bx = tanh(2.5*(x[:,0:1]+1)/x1)*\
+             tanh(2.5*(1-x[:,0:1])/x1)*\
+             tanh(2.5*(x[:,1:2]+1)/x1)*\
+             tanh(2.5*(1-x[:,1:2])/x1)
+
         # get starting wavefield
         p = jnp.expand_dims(source, axis=1)# (k, 1, 4)
         x = jnp.expand_dims(x, axis=0)# (1, n, 2)
         f = (p[:,:,3:4]*exp(-0.5 * ((x-p[:,:,0:2])**2).sum(2, keepdims=True)/(p[:,:,2:3]**2))).sum(0)# (n, 1)
-
-        # form time-decaying anzatz
-        t1 = source[:,2].min()/c0
         f = exp(-0.5*(1.5*t/t1)**2) * f
-        t = tanh(2.5*t/t1)**2
-        return f + t*u
+        return bx*(f + bt*u)
 
     @staticmethod
     def loss_fn(all_params, constraints):
@@ -426,14 +432,11 @@ class WaveEquationConstantVelocity3D(Problem):
         DELTAX, DELTAY, DELTAT = deltax/dx, deltay/dy, deltat/dt
         NX, NY, NSTEPS = batch_shape[0]*dx-(dx-1), batch_shape[1]*dy-(dy-1), batch_shape[2]*dt-(dt-1)
 
-        # get starting wavefield
+        # get starting wavefield using constraining function
         xx,yy = np.meshgrid(np.linspace(xmin, xmax, NX), np.linspace(ymin, ymax, NY), indexing="ij")# (NX, NY)
-        x = np.stack([xx.ravel(), yy.ravel()], axis=1)# (n, 2)
-        exp = np.exp
-        p = np.expand_dims(source, axis=1)# (k, 1, 4)
-        x = np.expand_dims(x, axis=0)# (1, n, 2)
-        f = (p[:,:,3:4]*exp(-0.5 * ((x-p[:,:,0:2])**2).sum(2, keepdims=True)/(p[:,:,2:3]**2))).sum(0)# (n, 1)
-        p0 = f.reshape((NX, NY))
+        x = np.stack([xx.ravel(), yy.ravel(), jnp.zeros_like(xx).ravel()], axis=1)# (n, 3)
+        p0 = WaveEquationConstantVelocity3D.constraining_fn(all_params, x, jnp.zeros((x.shape[0],1))).reshape((NX, NY))
+        p0 = np.array(p0)
 
         # get velocity model
         x = np.stack([xx.ravel(), yy.ravel()], axis=1)# (n, 2)
@@ -441,31 +444,25 @@ class WaveEquationConstantVelocity3D(Problem):
         if c.shape[0]>1: c = c.reshape((NX, NY))
         else: c = c*np.ones_like(xx)
 
-        # add padded CPML boundary
-        NPOINTS_PML = 10
-        p0 = np.pad(p0, [(NPOINTS_PML,NPOINTS_PML),(NPOINTS_PML,NPOINTS_PML)], mode="edge")
-        c =   np.pad(c, [(NPOINTS_PML,NPOINTS_PML),(NPOINTS_PML,NPOINTS_PML)], mode="edge")
-
         # run simulation
         logger.info(f'Running seismicCPML2D {(NX, NY, NSTEPS)}..')
         wavefields, _ = seismicCPML2D(
-                    NX+2*NPOINTS_PML,
-                    NY+2*NPOINTS_PML,
+                    NX,
+                    NY,
                     NSTEPS,
                     DELTAX,
                     DELTAY,
                     DELTAT,
-                    NPOINTS_PML,
+                    0,# with only Dirichlet BCs (no PML)
                     c,
-                    np.ones((NX+2*NPOINTS_PML,NY+2*NPOINTS_PML)),
+                    np.ones((NX,NY)),
                     (p0.copy(),p0.copy()),
                     f0,
                     np.float32,
                     output_wavefields=True,
                     gather_is=None)
 
-        # get croped, decimated, flattened wavefields
-        wavefields = wavefields[:,NPOINTS_PML:-NPOINTS_PML,NPOINTS_PML:-NPOINTS_PML]
+        # get decimated, flattened wavefields
         wavefields = wavefields[::dt, ::dx, ::dy]
         wavefields = np.moveaxis(wavefields, 0, -1)
         assert wavefields.shape == batch_shape
@@ -492,6 +489,7 @@ class WaveEquationGaussianVelocity3D(WaveEquationConstantVelocity3D):
         du
         --(x,y,0) = 0
         dt
+        u(-1,y,t) = u(+1,y,t) = u(x,-1,t) = u(x,+1,t) = 0
     """
 
     @staticmethod
@@ -533,15 +531,15 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     mixture=np.concatenate([
-        np.random.uniform(-3, 3, (100,2)),# location
+        np.random.uniform(-1, 1, (100,2)),# location
         0.4*np.ones((100,1)),# width
         0.3*np.random.uniform(-1, 1, (100,1)),# amplitude
         ], axis=1)
 
     source=np.array([# multiscale sources
-        [0,0,0.1,1],
-        [1,1,0.2,0.5],
-        [-1.1,-0.5,0.4,0.25],
+        [0.1,0.1,0.1,1],
+        [0.5,0.5,0.2,0.5],
+        [-0.2,-0.2,0.4,0.25],
         ])
 
     # test wave equation
@@ -552,7 +550,7 @@ if __name__ == "__main__":
         all_params = {"static":{"problem":ps_[0]}, "trainable":{"problem":ps_[1]}}
 
         batch_shape = (80,80,50)
-        x_batch = RectangularDomainND._rectangle_samplerND(None, "grid", np.array([-3, -3, 0]), np.array([3, 3, 3]), batch_shape)
+        x_batch = RectangularDomainND._rectangle_samplerND(None, "grid", np.array([-1, -1, 0]), np.array([1, 1, 1]), batch_shape)
 
         plt.figure()
         c = np.array(problem.c_fn(all_params, x_batch))

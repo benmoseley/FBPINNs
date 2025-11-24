@@ -50,10 +50,10 @@ def seismicCPML2D(NX,
     if NPOWER < 1: raise Exception("ERROR: NPOWER must be greater than 1")
 
 
-    # GET DAMPENING PROFILES
-
-    [[a_x, a_x_half, b_x, b_x_half, K_x, K_x_half],
-     [a_y, a_y_half, b_y, b_y_half, K_y, K_y_half]] = get_dampening_profiles(velocity, NPOINTS_PML, Rcoef, K_MAX_PML, ALPHA_MAX_PML, NPOWER, DELTAT, DELTAS=(DELTAX, DELTAY), dtype=dtype, qc=False)
+    # GET DAMPENING PROFILES IF USING PML
+    if NPOINTS_PML:
+        [[a_x, a_x_half, b_x, b_x_half, K_x, K_x_half],
+         [a_y, a_y_half, b_y, b_y_half, K_y, K_y_half]] = get_dampening_profiles(velocity, NPOINTS_PML, Rcoef, K_MAX_PML, ALPHA_MAX_PML, NPOWER, DELTAT, DELTAS=(DELTAX, DELTAY), dtype=dtype, qc=False)
 
 
     # INITIALISE ARRAYS
@@ -63,11 +63,12 @@ def seismicCPML2D(NX,
     pressure_present = initial_pressures[1].astype(dtype)
     pressure_past = initial_pressures[0].astype(dtype)
 
-    memory_dpressure_dx = np.zeros((NX, NY), dtype=dtype)
-    memory_dpressure_dy = np.zeros((NX, NY), dtype=dtype)
+    if NPOINTS_PML:
+        memory_dpressure_dx = np.zeros((NX, NY), dtype=dtype)
+        memory_dpressure_dy = np.zeros((NX, NY), dtype=dtype)
 
-    memory_dpressurexx_dx = np.zeros((NX, NY), dtype=dtype)
-    memory_dpressureyy_dy = np.zeros((NX, NY), dtype=dtype)
+        memory_dpressurexx_dx = np.zeros((NX, NY), dtype=dtype)
+        memory_dpressureyy_dy = np.zeros((NX, NY), dtype=dtype)
 
     if output_wavefields: wavefields = np.zeros((NSTEPS, NX, NY), dtype=dtype)
     if output_gather: gather = np.zeros((gather_is.shape[0], NSTEPS), dtype=dtype)
@@ -87,11 +88,12 @@ def seismicCPML2D(NX,
         value_dpressure_dx = np.pad((pressure_present[1:NX,:]-pressure_present[:NX-1,:]) / DELTAX, [[0,1],[0,0]], mode="constant", constant_values=0.)
         value_dpressure_dy = np.pad((pressure_present[:,1:NY]-pressure_present[:,:NY-1]) / DELTAY, [[0,0],[0,1]], mode="constant", constant_values=0.)
 
-        memory_dpressure_dx = b_x_half * memory_dpressure_dx + a_x_half * value_dpressure_dx
-        memory_dpressure_dy = b_y_half * memory_dpressure_dy + a_y_half * value_dpressure_dy
+        if NPOINTS_PML:
+            memory_dpressure_dx = b_x_half * memory_dpressure_dx + a_x_half * value_dpressure_dx
+            memory_dpressure_dy = b_y_half * memory_dpressure_dy + a_y_half * value_dpressure_dy
 
-        value_dpressure_dx = value_dpressure_dx / K_x_half + memory_dpressure_dx
-        value_dpressure_dy = value_dpressure_dy / K_y_half + memory_dpressure_dy
+            value_dpressure_dx = value_dpressure_dx / K_x_half + memory_dpressure_dx
+            value_dpressure_dy = value_dpressure_dy / K_y_half + memory_dpressure_dy
 
         pressure_xx = value_dpressure_dx / density_half_x
         pressure_yy = value_dpressure_dy / density_half_y
@@ -101,11 +103,12 @@ def seismicCPML2D(NX,
         value_dpressurexx_dx = np.pad((pressure_xx[1:NX,:]-pressure_xx[:NX-1,:]) / DELTAX, [[1,0],[0,0]], mode="constant", constant_values=0.)
         value_dpressureyy_dy = np.pad((pressure_yy[:,1:NY]-pressure_yy[:,:NY-1]) / DELTAY, [[0,0],[1,0]], mode="constant", constant_values=0.)
 
-        memory_dpressurexx_dx = b_x * memory_dpressurexx_dx + a_x * value_dpressurexx_dx
-        memory_dpressureyy_dy = b_y * memory_dpressureyy_dy + a_y * value_dpressureyy_dy
+        if NPOINTS_PML:
+            memory_dpressurexx_dx = b_x * memory_dpressurexx_dx + a_x * value_dpressurexx_dx
+            memory_dpressureyy_dy = b_y * memory_dpressureyy_dy + a_y * value_dpressureyy_dy
 
-        value_dpressurexx_dx = value_dpressurexx_dx / K_x + memory_dpressurexx_dx
-        value_dpressureyy_dy = value_dpressureyy_dy / K_y + memory_dpressureyy_dy
+            value_dpressurexx_dx = value_dpressurexx_dx / K_x + memory_dpressurexx_dx
+            value_dpressureyy_dy = value_dpressureyy_dy / K_y + memory_dpressureyy_dy
 
         dpressurexx_dx = value_dpressurexx_dx
         dpressureyy_dy = value_dpressureyy_dy
@@ -161,7 +164,7 @@ if __name__ == "__main__":
     dtype = np.float32
 
     NX, NY = 256,256
-    NSTEPS = 2000
+    NSTEPS = 4000
     NPOINTS_PML = 10
     DELTAX, DELTAY = 20,20
     DELTAT = 0.001 # sample rate for FD modelling (s)
