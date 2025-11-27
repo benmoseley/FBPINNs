@@ -1,6 +1,6 @@
 # Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods
 
-This branch reproduces the results of our paper: [Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods](https://arxiv.org/abs/2506.17626).
+This branch reproduces the results of our paper: [Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods](https://doi.org/10.1016/j.cma.2025.118583).
 
 ## Reproducing our results
 
