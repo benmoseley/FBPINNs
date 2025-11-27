@@ -233,14 +233,16 @@ year = {2024}
 
 @article{VanBeek2025,
 author = {van Beek, Jan Willem and Dolean, Victorita and Moseley, Ben},
-archivePrefix = {arXiv},
-arxivId = {2506.17626},
-eprint = {2506.17626},
-journal = {arXiv},
+doi = {10.1016/J.CMA.2025.118583},
+issn = {0045-7825},
+journal = {Computer Methods in Applied Mechanics and Engineering},
+pages = {118583},
 title = {{Local feature filtering for scalable and well-conditioned Random Feature Methods}},
-url = {https://arxiv.org/pdf/2506.17626},
+url = {https://www.sciencedirect.com/science/article/pii/S0045782525008552},
+volume = {449},
 year = {2025}
 }
+
 ```
 
 ## Reproducing our papers
@@ -249,6 +251,8 @@ To reproduce the exact results of our original FBPINN paper: *[Finite Basis Phys
 
 To reproduce the results of our paper: [*Multilevel domain decomposition-based architectures for physics-informed neural networks*](https://doi.org/10.1016/j.cma.2024.117116), please see this [branch](https://github.com/benmoseley/FBPINNs/tree/multilevel-paper/multilevel-paper).
 
+To reproduce the results of our paper: [*Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods*](https://doi.org/10.1016/j.cma.2025.118583),
+please see this [branch](https://github.com/benmoseley/FBPINNs/tree/elm-rrqr-paper/elm-rrqr-paper).
 
 ## Further questions?
 
