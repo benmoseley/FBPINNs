@@ -257,15 +257,20 @@ year = {2025}
 
 ## Reproducing our papers
 
-To reproduce the exact results of our original FBPINN paper: *[Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations](https://link.springer.com/article/10.1007/s10444-023-10065-9), B. Moseley, T. Nissen-Meyer and A. Markham, Jul 2023 Advances in Computational Mathematics*, you will need to use the legacy PyTorch FBPINN implementation, which is available at this [commit](https://github.com/benmoseley/FBPINNs/tree/pytorch).
+To reproduce the exact results from our papers, please use the following branches:
 
-To reproduce the results of our paper: [*Multilevel domain decomposition-based architectures for physics-informed neural networks*](https://doi.org/10.1016/j.cma.2024.117116), please see this [branch](https://github.com/benmoseley/FBPINNs/tree/multilevel-paper/multilevel-paper).
+- **Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations**  
+  [[Paper]](https://link.springer.com/article/10.1007/s10444-023-10065-9) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/pytorch) (uses legacy PyTorch FBPINN implementation)
 
-To reproduce the results of our paper: [*ELM-FBPINNs: An Efficient Multilevel Random Feature Method*](https://arxiv.org/abs/2409.01949),
-please see this [branch](https://github.com/benmoseley/FBPINNs/tree/elm-paper/elm-paper).
+- **Multilevel domain decomposition-based architectures for physics-informed neural networks**  
+  [[Paper]](https://doi.org/10.1016/j.cma.2024.117116) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/multilevel-paper/multilevel-paper)
 
-To reproduce the results of our paper: [*Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods*](https://doi.org/10.1016/j.cma.2025.118583),
-please see this [branch](https://github.com/benmoseley/FBPINNs/tree/elm-rrqr-paper/elm-rrqr-paper).
+- **ELM-FBPINNs: An Efficient Multilevel Random Feature Method**  
+  [[Paper]](https://arxiv.org/abs/2409.01949) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/elm-paper/elm-paper)
+
+- **Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods**  
+  [[Paper]](https://doi.org/10.1016/j.cma.2025.118583) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/elm-rrqr-paper/elm-rrqr-paper)
+  
 
 ## Further questions?
 
