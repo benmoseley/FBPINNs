@@ -231,14 +231,17 @@ volume = {429},
 year = {2024}
 }
 
-@article{Anderson2025,
+@article{Anderson2026,
 author = {Anderson, Samuel and Dolean, Victorita and Moseley, Ben and Pestana, Jennifer},
-arxivId = {2409.01949},
-eprint = {2409.01949},
-journal = {arXiv},
-title = {{ELM-FBPINNs: An Efficient Multilevel Random Feature Method}},
-url = {https://arxiv.org/pdf/2409.01949},
-year = {2025}
+doi = {10.1007/S44379-026-00071-1},
+isbn = {0123456789},
+issn = {3005-1436},
+journal = {Machine Learning for Computational Science and Engineering},
+publisher = {Springer},
+title = {{ELM-FBPINNs: an efficient multilevel random feature method}},
+url = {https://link.springer.com/article/10.1007/s44379-026-00071-1},
+volume = {2},
+year = {2026}
 }
 
 @article{VanBeek2025,
@@ -252,7 +255,6 @@ url = {https://www.sciencedirect.com/science/article/pii/S0045782525008552},
 volume = {449},
 year = {2025}
 }
-
 ```
 
 ## Reproducing our papers
@@ -266,7 +268,7 @@ To reproduce the exact results from our papers, please use the following branche
   [[Paper]](https://doi.org/10.1016/j.cma.2024.117116) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/multilevel-paper/multilevel-paper)
 
 - **ELM-FBPINNs: An Efficient Multilevel Random Feature Method**  
-  [[Paper]](https://arxiv.org/abs/2409.01949) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/elm-paper/elm-paper)
+  [[Paper]](https://doi.org/10.1007/s44379-026-00071-1) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/elm-paper/elm-paper)
 
 - **Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods**  
   [[Paper]](https://doi.org/10.1016/j.cma.2025.118583) · [[Branch]](https://github.com/benmoseley/FBPINNs/tree/elm-rrqr-paper/elm-rrqr-paper)
