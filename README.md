@@ -231,6 +231,16 @@ volume = {429},
 year = {2024}
 }
 
+@article{Anderson2025,
+author = {Anderson, Samuel and Dolean, Victorita and Moseley, Ben and Pestana, Jennifer},
+arxivId = {2409.01949},
+eprint = {2409.01949},
+journal = {arXiv},
+title = {{ELM-FBPINNs: An Efficient Multilevel Random Feature Method}},
+url = {https://arxiv.org/pdf/2409.01949},
+year = {2025}
+}
+
 @article{VanBeek2025,
 author = {van Beek, Jan Willem and Dolean, Victorita and Moseley, Ben},
 doi = {10.1016/J.CMA.2025.118583},
@@ -250,6 +260,9 @@ year = {2025}
 To reproduce the exact results of our original FBPINN paper: *[Finite Basis Physics-Informed Neural Networks (FBPINNs): a scalable domain decomposition approach for solving differential equations](https://link.springer.com/article/10.1007/s10444-023-10065-9), B. Moseley, T. Nissen-Meyer and A. Markham, Jul 2023 Advances in Computational Mathematics*, you will need to use the legacy PyTorch FBPINN implementation, which is available at this [commit](https://github.com/benmoseley/FBPINNs/tree/pytorch).
 
 To reproduce the results of our paper: [*Multilevel domain decomposition-based architectures for physics-informed neural networks*](https://doi.org/10.1016/j.cma.2024.117116), please see this [branch](https://github.com/benmoseley/FBPINNs/tree/multilevel-paper/multilevel-paper).
+
+To reproduce the results of our paper: [*ELM-FBPINNs: An Efficient Multilevel Random Feature Method*](https://arxiv.org/abs/2409.01949),
+please see this [branch](https://github.com/benmoseley/FBPINNs/tree/elm-paper/elm-paper).
 
 To reproduce the results of our paper: [*Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods*](https://doi.org/10.1016/j.cma.2025.118583),
 please see this [branch](https://github.com/benmoseley/FBPINNs/tree/elm-rrqr-paper/elm-rrqr-paper).
