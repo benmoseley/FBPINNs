@@ -1,17 +1,29 @@
 """
 Defines all of the problems used in our paper:
-Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods
-https://arxiv.org/abs/2506.17626
+ELM-FBPINNs: An Efficient Multilevel Random Feature Method
 """
 
 import jax.numpy as jnp
-import jax
 
-from fbpinns.problems import HarmonicOscillator1D, HarmonicOscillator1DHardBC, WaveEquationConstantVelocity3D, Problem
-from fbpinns.util.logger import logger
+from fbpinns.problems import Problem
 
 
-class HarmonicOscillatorELM1D(HarmonicOscillator1D):
+class HarmonicOscillator1D(Problem):
+
+    @staticmethod
+    def init_params(d=2, w0=20):
+
+        mu, k = 2*d, w0**2
+
+        static_params = {
+            "dims":(1,1),
+            "d":d,
+            "w0":w0,
+            "mu":mu,
+            "k":k,
+            }
+
+        return static_params, {}
 
     @staticmethod
     def sample_constraints(all_params, domain, key, sampler, batch_shapes):
@@ -39,6 +51,38 @@ class HarmonicOscillatorELM1D(HarmonicOscillator1D):
                 ]
 
     @staticmethod
+    def loss_fn(all_params, constraints):
+
+        mu, k = all_params["static"]["problem"]["mu"], all_params["static"]["problem"]["k"]
+
+        # physics residual
+        x_batch, u, ut, utt = constraints[0]
+        phys = utt + mu*ut + k*u
+
+        # boundary residual
+        (_, uc, u), (_, utc, ut) = constraints[1], constraints[2]
+        b1 = k*(u - uc)
+        b2 = jnp.sqrt(k)*(ut - utc)
+
+        return jnp.mean(phys**2) + jnp.mean(b1**2) + jnp.mean(b2**2)
+
+    @staticmethod
+    def exact_solution(all_params, x_batch, batch_shape=None):
+
+        d, w0 = all_params["static"]["problem"]["d"], all_params["static"]["problem"]["w0"]
+
+        w = jnp.sqrt(w0**2-d**2)
+        phi = jnp.arctan(-d/w)
+        A = 1/(2*jnp.cos(phi))
+        cos = jnp.cos(phi + w * x_batch)
+        exp = jnp.exp(-d * x_batch)
+        u = exp * 2 * A * cos
+
+        return u
+
+class HarmonicOscillatorELM1D(HarmonicOscillator1D):
+
+    @staticmethod
     def constraining_fn(all_params, x_batch, u, part=None):
         left = u
         if part == "left":
@@ -59,86 +103,17 @@ class HarmonicOscillatorELM1D(HarmonicOscillator1D):
         # boundary residual
         (x1, uc, u), (x2, utc, ut) = constraints[1], constraints[2]
         if len(uc):
-            b1 = jnp.sqrt(1e6)*u
-            g1 = jnp.sqrt(1e6)*uc
-            b2 = jnp.sqrt(1e2)*ut
-            g2 = jnp.sqrt(1e2)*utc
+            b1 = k*u
+            g1 = k*uc
+            b2 = jnp.sqrt(k)*ut
+            g2 = jnp.sqrt(k)*utc
         else:
             b1 = jnp.zeros_like(u)
             g1 = jnp.zeros_like(x1)
             b2 = jnp.zeros_like(ut)
             g2 = jnp.zeros_like(x2)
 
-        logger.debug("residual")
-        logger.debug((phys.shape, f.shape, b1.shape, g1.shape, b2.shape, g2.shape))
-
         return [[phys, f], [b1, g1], [b2, g2]]
-
-
-class HarmonicOscillatorELM1DHardBC(HarmonicOscillator1DHardBC):
-
-    @staticmethod
-    def constraining_fn(all_params, x_batch, u, part=None):
-
-        sd = all_params["static"]["problem"]["sd"]
-        x, tanh = x_batch[:,0:1], jnp.tanh
-
-        left = (tanh(x/sd)**2) * u
-        if part == "left":
-            return left
-        right = 1
-        return left + right
-
-    @staticmethod
-    def loss_fn(all_params, constraints):
-
-        mu, k = all_params["static"]["problem"]["mu"], all_params["static"]["problem"]["k"]
-
-        # physics residual
-        x_batch, u, ut, utt = constraints[0]
-        phys = utt + mu*ut + k*u
-        f = jnp.zeros_like(x_batch)
-
-        logger.debug("residual")
-        logger.debug((phys.shape, f.shape))
-
-        return [[phys, f]]
-
-
-class WaveEquationConstantVelocityELM3D(WaveEquationConstantVelocity3D):
-
-    @staticmethod
-    def constraining_fn(all_params, x_batch, u, part=None):
-        params = all_params["static"]["problem"]
-        c0, source = params["c0"], params["source"]
-        x, t = x_batch[:,0:2], x_batch[:,2:3]
-        tanh, exp = jax.nn.tanh, jnp.exp
-
-        t1 = source[:,2].min()/c0
-        bt = tanh(2.5*t/t1)**2
-        x1 = source[:,2].min()
-        bx = tanh(2.5*(x[:,0:1]+1)/x1)*\
-             tanh(2.5*(1-x[:,0:1])/x1)*\
-             tanh(2.5*(x[:,1:2]+1)/x1)*\
-             tanh(2.5*(1-x[:,1:2])/x1)
-        left = bx*bt*u
-        if part == "left":
-            return left
-        p = jnp.expand_dims(source, axis=1)# (k, 1, 4)
-        x = jnp.expand_dims(x, axis=0)# (1, n, 2)
-        f = (p[:,:,3:4]*exp(-0.5 * ((x-p[:,:,0:2])**2).sum(2, keepdims=True)/(p[:,:,2:3]**2))).sum(0)# (n, 1)
-        f = exp(-0.5*(1.5*t/t1)**2) * f
-        right = bx*f
-        return left + right
-
-    @staticmethod
-    def loss_fn(all_params, constraints):
-        c_fn = all_params["static"]["problem"]["c_fn"]
-        x_batch, uxx, uyy, utt = constraints[0]
-        phys = (uxx + uyy) - (1/c_fn(all_params, x_batch)**2)*utt
-        f = jnp.zeros_like(x_batch[:,0:1])
-        return [[phys, f]]
-
 
 
 class Laplace2D_multiscale(Problem):
@@ -182,8 +157,8 @@ class Laplace2D_multiscale(Problem):
         x, y = x_batch[:,0:1], x_batch[:,1:2]
         params = all_params["static"]["problem"]
         sin, pi, omegas, ns = jnp.sin, jnp.pi, params["omegas"], params["ns"]
-        f = (2/ns)*jnp.sum(jnp.stack([((omega*pi)**2)*sin(omega*pi*x)*sin(omega*pi*y) for omega in omegas], axis=0), axis=0)
-        phys = f + uxx + uyy
+        f = -(2/ns)*jnp.sum(jnp.stack([((omega*pi)**2)*sin(omega*pi*x)*sin(omega*pi*y) for omega in omegas], axis=0), axis=0)
+        phys = uxx + uyy - f
         phys2 = phys**2
         if "problem" in all_params["trainable"] and "adaptive_weights" in all_params["trainable"]["problem"]:
             phys2 = all_params["trainable"]["problem"]["adaptive_weights"][0].reshape(-1,1)*phys2
@@ -207,7 +182,8 @@ class LaplaceELM2D_multiscale(Laplace2D_multiscale):
         left = tanh((x-0)/sd)*tanh((1-x)/sd)*tanh((y-0)/sd)*tanh((1-y)/sd)*u
         if part == "left":
             return left
-        return left
+        right = 0
+        return left + right
 
     @staticmethod
     def loss_fn(all_params, constraints):
@@ -218,4 +194,107 @@ class LaplaceELM2D_multiscale(Laplace2D_multiscale):
         f = -(2/ns)*jnp.sum(jnp.stack([((omega*pi)**2)*sin(omega*pi*x)*sin(omega*pi*y) for omega in omegas], axis=0), axis=0)
         phys = uxx + uyy
         return [[phys, f]]
+
+
+
+class Helmholtz2D(Problem):
+
+    @staticmethod
+    def init_params(k=1, omega=1):
+        static_params = {
+            "dims":(1,2),
+            "k":k,
+            "omega":omega,
+            }
+        return static_params, {}
+
+    @staticmethod
+    def sample_constraints(all_params, domain, key, sampler, batch_shapes):
+
+        # physics loss
+        x_batch_phys = domain.sample_interior(all_params, key, sampler, batch_shapes[0])
+        required_ujs_phys = (
+            (0,(),),
+            (0,(0,0)),
+            (0,(1,1)),
+        )
+
+        # boundary loss
+        x_batchs_boundary = domain.sample_boundaries(all_params, key, sampler, batch_shapes[1])
+        x_batch_boundary = jnp.concatenate(x_batchs_boundary, axis=0)
+        u_boundary = HelmholtzELM2D.exact_solution(all_params, x_batch_boundary)
+        required_ujs_boundary = (
+            (0,()),
+        )
+        return [[x_batch_phys, required_ujs_phys], [x_batch_boundary, u_boundary, required_ujs_boundary]]
+
+    @staticmethod
+    def loss_fn(all_params, constraints):
+
+        # physics residual
+        x_batch,u,uxx,uyy = constraints[0]
+        x, y = x_batch[:,0:1], x_batch[:,1:2]
+        params = all_params["static"]["problem"]
+        k, omega = params["k"], params["omega"]
+
+        a = jnp.pi*omega
+        u_exact = jnp.sin(a*x)*jnp.sin(a*2*y)+jnp.sin(a*3*x*y)
+        f = (-5*a**2*jnp.sin(a*x)*jnp.sin(2*a*y)
+             -9*a**2*(x**2+y**2)*jnp.sin(3*a*x*y)
+             +k**2*u_exact)
+        phys = (uxx + uyy) + (k**2)*u - f
+
+        # boundary residual
+        _, uc, u = constraints[1]
+        b1 = 5*(omega**2)*(u - uc)
+
+        return jnp.mean(phys**2) + jnp.mean(b1**2)
+
+    @staticmethod
+    def exact_solution(all_params, x_batch, batch_shape=None):
+        omega = all_params["static"]["problem"]["omega"]
+        x, y = x_batch[:,0:1], x_batch[:,1:2]
+        a = jnp.pi*omega
+        u = jnp.sin(a*x)*jnp.sin(a*2*y)+jnp.sin(a*3*x*y)
+        return u
+
+class HelmholtzELM2D(Helmholtz2D):
+
+    @staticmethod
+    def constraining_fn(all_params, x_batch, u, part=None):
+        left = u
+        if part == "left":
+            return left
+        right = 0
+        return left + right
+
+    @staticmethod
+    def loss_fn(all_params, constraints):
+
+        # physics residual
+        x_batch,u,uxx,uyy = constraints[0]
+        x, y = x_batch[:,0:1], x_batch[:,1:2]
+        params = all_params["static"]["problem"]
+        k, omega = params["k"], params["omega"]
+
+        a = jnp.pi*omega
+        u_exact = jnp.sin(a*x)*jnp.sin(a*2*y)+jnp.sin(a*3*x*y)
+        f = (-5*a**2*jnp.sin(a*x)*jnp.sin(2*a*y)
+             -9*a**2*(x**2+y**2)*jnp.sin(3*a*x*y)
+             +k**2*u_exact)
+        phys = (uxx + uyy) + (k**2)*u
+
+        # boundary residual
+        x, uc, u = constraints[1]
+        if len(uc):
+            b1 = 5*(omega**2)*u
+            g1 = 5*(omega**2)*uc
+        else:
+            b1 = jnp.zeros_like(u)
+            g1 = jnp.zeros_like(x)
+
+        return [[phys, f], [b1, g1]]
+
+
+
 

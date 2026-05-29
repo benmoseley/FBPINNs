@@ -11,20 +11,20 @@ from fbpinns.analysis import FBPINN_solution as FBPINN_solution_
 from fbpinns.analysis import PINN_solution as PINN_solution_
 
 
-def load_ELMFBPINN(tag, problem, network, l, w, h, p, n, lr, seed, optimiser, optimiser_kwargs, rootdir="results/"):
-    run = f"ELMFBPINN_{tag}_{problem.__name__}_{network.__name__}_{l}-levels_{w}-overlap_{h}-layers_{p}-hidden_{n[0]}-n_{optimiser.__name__}-{optimiser_kwargs['system']}-{optimiser_kwargs['solver'].__name__}-{seed}"
+def load_ELMFBPINN(tag, problem, network, l, w, h, C, ns, lr, seed, optimiser, optimiser_kwargs, rootdir="results/"):
+    run = f"ELMFBPINN_{tag}_{problem.__name__}_{network.__name__}_{l}-levels_{w}-overlap_{h}-layers_{C}-hidden_{ns[0][0]}-n_{optimiser.__name__}-{optimiser_kwargs['system']}-{optimiser_kwargs['solver'].__name__}-{seed}"
     c, model = load_model(run, rootdir=rootdir)
     i,t,l1n = model[-1][:,0], model[-1][:,3], model[-1][:,-1]
     return c, model, i, t, l1n
 
-def load_FBPINN(tag, problem, network, l, w, h, p, n, lr, seed, rootdir="results/"):
-    run = f"FBPINN_{tag}_{problem.__name__}_{network.__name__}_{l}-levels_{w}-overlap_{h}-layers_{p}-hidden_{n[0]}-n_{lr}-lr-{seed}"
+def load_FBPINN(tag, problem, network, l, w, h, C, ns, lr, seed, rootdir="results/"):
+    run = f"FBPINN_{tag}_{problem.__name__}_{network.__name__}_{l}-levels_{w}-overlap_{h}-layers_{C}-hidden_{ns[0][0]}-n_{lr}-lr-{seed}"
     c, model = load_model(run, rootdir=rootdir)
     i,t,l1n = model[-1][:,0], model[-1][:,3], model[-1][:,-1]
     return c, model, i, t, l1n
 
-def load_PINN(tag, problem, network, h, p, n, lr, seed, rootdir="results/"):
-    run = f"PINN_{tag}_{problem.__name__}_{network.__name__}_{h}-layers_{p}-hidden_{n[0]}-n_{lr}-lr-{seed}"
+def load_PINN(tag, problem, network, h, C, ns, lr, seed, rootdir="results/"):
+    run = f"PINN_{tag}_{problem.__name__}_{network.__name__}_{h}-layers_{C}-hidden_{ns[0][0]}-n_{lr}-lr-{seed}"
     c, model = load_model(run, rootdir=rootdir)
     i,t,l1n = model[-1][:,0], model[-1][:,3], model[-1][:,-1]
     return c, model, i, t, l1n

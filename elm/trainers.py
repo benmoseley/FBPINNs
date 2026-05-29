@@ -163,7 +163,7 @@ def FBPINN_linear_solve(optimiser_fn, active_opt_states,
     loss = test(info[0], Mall, fall, a, a0_fixed, J_active, C, active_params,
                 *all_test_inputs)
     logger.info(f"test losses: {loss}")
-    lossval = jnp.array(loss[1])
+    lossval = jnp.array(loss[2])
 
     return lossval, active_opt_states, active_params
 

@@ -1,6 +1,6 @@
-# Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods
+# ELM-FBPINNs: An Efficient Multilevel Random Feature Method
 
-This branch reproduces the results of our paper: [Local Feature Filtering for Scalable and Well-Conditioned Domain-Decomposed Random Feature Methods](https://doi.org/10.1016/j.cma.2025.118583).
+This branch reproduces the results of our paper: [ELM-FBPINNs: An Efficient Multilevel Random Feature Method](https://arxiv.org/abs/2409.01949).
 
 ## Reproducing our results
 
@@ -13,6 +13,8 @@ Once all the models have been trained using `main.py` (this script will save mod
 `main.py` defines and trains all the FBPINNs and PINNs used in the paper.
 
 `problems.py` defines all the problems studied in the paper.
+
+`domains.py` defines the 2D L-shaped domain and domain decomposition studied in the paper.
 
 `plot.py` and `Paper plots.ipynb` reproduces all of the figures shown in the paper.
 

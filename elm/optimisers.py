@@ -149,13 +149,13 @@ def build_system(terms_left, terms_right, takess, constraints_left, J, C, J_acti
 
     # convert to single linear system
     M,f,A,b,Mall,fall = matrices[0]
-    for Mp,fp,Ap,bp,_,_ in matrices[1:]:
+    for Mp,fp,Ap,bp,Mallp,fallp in matrices[1:]:
         M = sps.vstack((M,Mp))# sparse
         f = jnp.vstack((f,fp))# dense
         A += Ap# sparse
         b += bp# dense
-        Mall = sps.vstack((M,Mall))# sparse
-        fall = jnp.vstack((f,fall))# dense
+        Mall = sps.vstack((Mall,Mallp))# sparse
+        fall = jnp.vstack((fall,fallp))# dense
     #txt_matrix("M.txt", M.toarray())
     #txt_matrix("A.txt", A.toarray())
 
@@ -435,7 +435,7 @@ def linear_solver(terms_left, terms_right, takess, constraints_left, J, C, J_act
     M,f,A,b,Mall,fall = build_system(terms_left, terms_right, takess, constraints_left, J, C, J_active, a0_fixed, build_normal)
 
     # report matrices
-    matrices = [("M", M)]
+    matrices = [("Mall", Mall), ("M", M)]
     if build_normal: matrices += [("A", A)]
     report_matrices(matrices, kwargs["save_results"], testing[0])
 
@@ -469,7 +469,7 @@ def block_rrqr_solver(terms_left, terms_right, takess, constraints_left, J, C, J
     assert err < 1e-6, "Q @ R - M_reduced error too large"
 
     # report matrices
-    matrices = [("M", M), ("M_reduced", M_reduced), ("Q", Q), ("R", R)]
+    matrices = [("Mall", Mall), ("M", M), ("M_reduced", M_reduced), ("Q", Q), ("R", R)]
     if build_normal: matrices += [("A", A)]
     report_matrices(matrices, kwargs["save_results"], testing[0])
 
@@ -519,7 +519,7 @@ def additive_schwarz_solver(terms_left, terms_right, takess, constraints_left, J
     #txt_matrix("P.txt", P.toarray())
 
     # report matrices
-    matrices = [("M", M), ("A", A), ("Ainv", Ainv), ("Ainv A", P)]
+    matrices = [("Mall", Mall), ("M", M), ("A", A), ("Ainv", Ainv), ("Ainv A", P)]
     report_matrices(matrices, kwargs["save_results"], testing[0])
 
     # solve system
