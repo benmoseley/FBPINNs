@@ -1,6 +1,6 @@
 # ELM-FBPINNs: An Efficient Multilevel Random Feature Method
 
-This branch reproduces the results of our paper: [ELM-FBPINNs: An Efficient Multilevel Random Feature Method](https://arxiv.org/abs/2409.01949).
+This branch reproduces the results of our paper: [ELM-FBPINNs: An Efficient Multilevel Random Feature Method](https://doi.org/10.1007/s44379-026-00071-1).
 
 ## Reproducing our results
 
